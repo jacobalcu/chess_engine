@@ -3,6 +3,7 @@
 venv/
 .venv/
 env/
+chessenv/
 .chessenv/
 
 #Dependency Management Files (optional, but good practice to exclude lock files)
