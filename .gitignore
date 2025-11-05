@@ -1,0 +1,34 @@
+#Python Virtual Environments
+#Python-standard virtual environment names
+venv/
+.venv/
+env/
+.chessenv/
+
+#Dependency Management Files (optional, but good practice to exclude lock files)
+
+#Pipenv files
+Pipfile.lock
+
+#Poetry files
+poetry.lock
+
+#Byte-compiled / optimized files
+pycache/
+*.pyc
+
+#Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+#Logs and databases
+*.log
+*.sqlite3
+
+#OS generated files
+.DS_Store
+Thumbs.db
+
+#Project-specific IDE files (if applicable, e.g., VS Code)
+.vscode/
