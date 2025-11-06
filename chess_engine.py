@@ -194,81 +194,81 @@ class ChessEngine:
 
         return best_move
 
+    def start_game_loop(self):
+        """
+        Starts terminal-based game loop
+        Human player is uppercase pieces
+        Chess engine is lowercase pieces
+        """
+        self.board.set_fen(chess.STARTING_FEN)
+        print("\n--- Game Start: Human vs Engine ---")
+        print("Enter moves in UCI format (e.g. e2e4). Type 'quit' or 'resign' to end")
+
+        while not self.board.is_game_over():
+            self.display_board()
+
+            current_turn = (
+                "White (Human)" if self.board.turn == chess.WHITE else "Black (Engine)"
+            )
+            print(
+                f"It is {current_turn}'s turn. Current eval (White's advantage): {self.evaluate_material(self.board):.2f}"
+            )
+
+            if self.board.turn == chess.WHITE:
+                # Human turn
+                while True:
+                    try:
+                        uci_move = input("Your move: ").strip().lower()
+
+                        # Handle resign
+                        if uci_move in ["quit", "resign"]:
+                            print("You resigned, Engine wins")
+                            return
+
+                        # Handle UCI conversion
+                        move = chess.Move.from_uci(uci_move)
+
+                        # Check move legal
+                        if move in self.board.legal_moves:
+                            self.board.push(move)
+                            break
+                        else:
+                            print("Illegal move. Try again")
+
+                    except ValueError:
+                        print("Invalid move format")
+            # Engine turn
+            else:
+                print(f"Engine is thinking (Depth {MAX_DEPTH})...")
+                engine_move = self.find_best_move(MAX_DEPTH)
+
+                if engine_move:
+                    print(f"Engine plays: {engine_move.uci()}")
+                    self.board.push(engine_move)
+                else:
+                    print("Engine found no legal moves")
+                    break
+
+        # Game Over
+        self.display_board()
+
+        outcome = self.board.outcome
+        if outcome:
+            print("Game Over")
+            if self.board.is_checkmate():
+                winner = (
+                    "White (You)" if outcome.winner == chess.WHITE else "Black (Engine)"
+                )
+                print(f"Checkmate! {winner} wins.")
+            else:
+                print(f"Game ended in a draw: {outcome.termination.name}")
+        else:
+            print("Game ended")
+
 
 # Main exe block to test setup
 if __name__ == "__main__":
     # Create instance of engine
     engine = ChessEngine()
 
-    # Display the starting board
-    engine.display_board()
-    # Initial Evaluation (should be 0 as they are even)
-    # initial_score = engine.evaluate_material()
-    # print(f"Material Evaluation (Starting Board): {initial_score}")
-
-    # print(f"Finding best move for White (Depth {MAX_DEPTH})")
-    # best_move_white = engine.find_best_move(MAX_DEPTH)
-
-    # if best_move_white:
-    #     engine.board.push(best_move_white)
-    #     print(f"Board after engine plays {best_move_white.uci()}")
-    #     engine.display_board()
-
-    # Set up simple tactical position to check material gain
-    free_pawn_fen = "r2qkb1r/pp3ppp/2n2n2/3Pp3/2B1P3/2N2N2/PPP2PPP/R1BQK2R w KQkq - 0 8"
-    free_bishop_fen = "rn1qkbnr/ppp1pppp/3p4/8/3PP3/7b/PPP2PPP/RNBQKBNR w KQkq - 0 8"
-    engine.board.set_fen(free_bishop_fen)
-
-    print(f"Test Pos: Free Pawn on e5 (Engine should take)")
-    engine.display_board()
-
-    print(f"Engine calc best move for White (Depth 3)")
-    best_move_tactical = engine.find_best_move(MAX_DEPTH)
-
-    if best_move_tactical:
-        engine.board.push(best_move_tactical)
-
-        print(f"Board after engine plays {best_move_tactical}")
-        engine.display_board()
-    # Sample move to show board changing
-    # 'e2e4' (UCI format) white pawn from e2 to e4
-    # try:
-    #     move_e2e4 = chess.Move.from_uci("e2e4")
-    #     if move_e2e4 in engine.board.legal_moves:
-    #         engine.board.push(move_e2e4)
-    #         print("\n--- After White plays e2e4 ---")
-    #         engine.display_board()
-    #         score_after_e2e4 = engine.evaluate_material()
-    #         # Should still be 0
-    #         print(f"Material Evaluation: {score_after_e2e4}")
-
-    #     else:
-    #         print("e2e4 is not legal")
-
-    #     move_d7d5 = chess.Move.from_uci("d7d5")
-    #     if move_d7d5 in engine.board.legal_moves:
-    #         engine.board.push(move_d7d5)
-    #         print("\n--- After Black plays d7d5 (No Capture) ---")
-    #         engine.display_board()
-    #         score_after_d7d5 = engine.evaluate_material()
-    #         # Should still be 0
-    #         print(f"Material Evaluation: {score_after_d7d5}")
-
-    #     # Capturing move
-    #     # White plays exd5 (pawn capture pawn)
-    #     move_exd5 = chess.Move.from_uci("e4d5")
-    #     if move_exd5 in engine.board.legal_moves:
-    #         engine.board.push(move_exd5)
-    #         print("\n--- After White plays exd5 (Pawn captures Pawn) ---")
-    #         engine.display_board()
-    #         score_after_capture = engine.evaluate_material()
-    #         # Should be 1 (White is winning)
-    #         print(f"Material Evaluation: {score_after_capture}")
-
-    # except ValueError as e:
-    #     print(f"\nError processing move: {e}")
-
-    # if engine.board.turn == chess.BLACK:
-    #     print("It is now Black's turn")
-    # else:
-    #     print("It is not White's turn")
+    engine.start_game_loop()
