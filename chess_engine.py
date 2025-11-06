@@ -57,11 +57,20 @@ class ChessEngine:
 
         return score
 
-    def minimax(self, board: chess.Board, depth: int, is_maximizing_player: bool):
+    def minimax(
+        self,
+        board: chess.Board,
+        depth: int,
+        alpha: float,
+        beta: float,
+        is_maximizing_player: bool,
+    ) -> float:
         """
         Recursive Minimax search function
         Assumes White tries to maximize the score
         and Black tries to minimize the score
+        Alpha is the best score found for maximizing player
+        Beta is the best score found for minimizing player
         """
         # Base Case: Game over or depth reached
         if depth == 0:
@@ -98,13 +107,20 @@ class ChessEngine:
             for move in board.legal_moves:
                 # Make move on the board
                 board.push(move)
-                # Recursive call minimax for opponent
-                evaluation = self.minimax(board, depth - 1, False)
+                # Recursive call minimax, pass cur a and b and switch players
+                evaluation = self.minimax(board, depth - 1, alpha, beta, False)
                 # Undo move to restore board state for next move search
                 board.pop()
 
                 # Update max score found so fat
                 max_eval = max(max_eval, evaluation)
+
+                # Alpha-Beta Pruning
+                alpha = max(alpha, max_eval)
+                if alpha >= beta:
+                    # If alpha is better than beta, we prune
+                    # Minimizer will never allow game to reach this path
+                    return max_eval
 
             return max_eval
 
@@ -115,10 +131,14 @@ class ChessEngine:
             # Iterate thru ALL legal moves
             for move in board.legal_moves:
                 board.push(move)
-                evaluation = self.minimax(board, depth - 1, True)
+                evaluation = self.minimax(board, depth - 1, alpha, beta, True)
                 board.pop()
 
                 min_eval = min(min_eval, evaluation)
+
+                beta = min(beta, min_eval)
+                if alpha >= beta:
+                    return min_eval
 
             return min_eval
 
@@ -132,6 +152,9 @@ class ChessEngine:
         else:
             best_eval = INF_SCORE
 
+        alpha = -INF_SCORE
+        beta = INF_SCORE
+
         best_move = None
 
         # Det who current turn is
@@ -143,7 +166,9 @@ class ChessEngine:
             self.board.push(move)
 
             # Call minimax for opponent
-            current_eval = self.minimax(self.board, depth - 1, not is_maximizing_player)
+            current_eval = self.minimax(
+                self.board, depth - 1, alpha, beta, not is_maximizing_player
+            )
 
             # Undo move
             self.board.pop()
@@ -153,10 +178,12 @@ class ChessEngine:
                 if current_eval > best_eval:
                     best_eval = current_eval
                     best_move = move
+                alpha = max(alpha, best_eval)
             else:
                 if current_eval < best_eval:
                     best_eval = current_eval
                     best_move = move
+                beta = min(beta, best_eval)
 
         print(f"\nSearch complete (Depth {depth}). Best score found: {best_eval}")
 
@@ -189,13 +216,14 @@ if __name__ == "__main__":
 
     # Set up simple tactical position to check material gain
     free_pawn_fen = "r2qkb1r/pp3ppp/2n2n2/3Pp3/2B1P3/2N2N2/PPP2PPP/R1BQK2R w KQkq - 0 8"
-    engine.board.set_fen(free_pawn_fen)
+    free_bishop_fen = "rn1qkbnr/ppp1pppp/3p4/8/3PP3/7b/PPP2PPP/RNBQKBNR w KQkq - 0 8"
+    engine.board.set_fen(free_bishop_fen)
 
     print(f"Test Pos: Free Pawn on e5 (Engine should take)")
     engine.display_board()
 
     print(f"Engine calc best move for White (Depth 3)")
-    best_move_tactical = engine.find_best_move(3)
+    best_move_tactical = engine.find_best_move(MAX_DEPTH)
 
     if best_move_tactical:
         engine.board.push(best_move_tactical)
